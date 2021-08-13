@@ -8,7 +8,7 @@ set(GL_LIBS
     "/usr/lib/x86_64-linux-gnu/libglut.so"
 )
 
-add_executable(texture ../main.cpp ../rawcode.cpp)
+add_executable(texture ../main.cpp ../rawcode.cpp ../model.h)
 
 find_package(OpenCV REQUIRED)
 target_link_libraries(texture

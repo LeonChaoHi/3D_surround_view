@@ -12,6 +12,7 @@
 //#include "Type912.h"
 //#include "calcsurface.h"
 //#include "28.h"
+#include "model.h"
 #pragma comment(lib, "opencv_core231d.lib")
 #pragma comment(lib, "opencv_imgproc231d.lib")
 #pragma comment(lib, "opencv_highgui231d.lib")
@@ -160,7 +161,7 @@ void DrawMyObjects(void)
                            1.0, 1.0, 1.0, 0.9, 1.0, 1.0, 1.0, 0.9};
     p = 0;
     glRotatef(-10, 1.0f, 0.0f, 0.0f);
-    ThreeSurface(mm, mm1, mm2, mm3, mm4, m, m1, m2, m3); //获取三维曲面顶投数据
+    ThreeSurface(mm, mm1, mm2, mm3, mm4, m, m1, m2, m3);    //获取三维曲面顶投数据    // 获取三维顶点坐标
 
     // 计算映射坐标
     for (i = 36; i <= 75; i += 3)   // 13个点

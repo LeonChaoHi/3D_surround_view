@@ -1,4 +1,8 @@
+/*
+ * Based on main.cpp, content substituted with rawcode
+ */
 //#include <glad/glad.h>
+#include <iostream>
 #include <GL/glut.h>
 //#include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -7,48 +11,15 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-///*
-// *  init window
-// */
-//void init()
-//{
-//    glClearColor(0.0, 0.0, 0.0, 0.0);
-//    glMatrixMode(GL_PROJECTION);
-//    glOrtho(-5, 5, -5, 5, 5, 15);
-//    glMatrixMode(GL_MODELVIEW);
-//    gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
-//}
-//
-//void display()
-//{
-//    glClear(GL_COLOR_BUFFER_BIT);
-//    glColor3f(1.0, 0, 0);
-//    glutWireTeapot(3);
-//    glFlush();
-//}
-//
-//int main(int argc, char *argv[])
-//{
-//    glutInit(&argc, argv);
-//    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
-//    glutInitWindowPosition(0, 0);
-//    glutInitWindowSize(300, 300);
-//    glutCreateWindow("OpenGL 3D View");
-//    init();
-//    glutDisplayFunc(display);
-//    glutMainLoop();
-//
-//    return 0;
-//}
+#include "model.h"
 #define PI 3.14159265359
 
-
-
 static GLuint texName[4];//存放纹理
+static GLint Model = 0;
 static double Ox = 0;
 static double Oy = 0;
 static double direction = 0;//站立位置及前进方向；
-static double step = 0.2;
+static double step = 0.5;
 GLUquadricObj*g_text;//曲面，制作一个包围房间的大球体做背景
 
 
@@ -112,19 +83,18 @@ void init()
     loadTexture("../resources/ceiling.bmp",texName[2]);
     loadTexture("../resources/back.bmp", texName[3]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);//所读取的图像数据的行对齐方式
+    Model = GL3DS_initialize_model();  // 生成模型的显示列表，保存显示列表号
 }
 
 // 定义纹理模型并刷新双缓存
-void display()
-{
+void display(){
+    glColor3f(0.5, 0.5, 0.5);
     // 清除屏幕
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//清除颜色缓冲以及深度缓冲
-    // 启用二维纹理
+    glEnable(GL_BLEND);
+
     glEnable(GL_TEXTURE_2D);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);//纹理和材质混合方式
-    glPushMatrix(); // 保存当前模型视图矩阵
-    glRotatef((GLfloat)direction, 0.0, 0.0, 1.0);   // 用变换后(旋转或移动)模型坐标系建立模型
-    glTranslated(Ox, Oy, 0.0);
 
     // 创建背景球体
     glBindTexture(GL_TEXTURE_2D, texName[3]);
@@ -174,6 +144,76 @@ void display()
     glTexCoord2f(1.0, 0.0);glVertex3f(10.0, -10.0, 10.0);
     glEnd();
 
+    // 3ds model
+    glCallList(Model);  // 调用显示列表
+
+    glFlush();
+    glutSwapBuffers();//交换双缓存
+    glutPostRedisplay();//标志下次刷新，没有的话，程序打开后不会刷新界面
+}
+void display_old()
+{
+    // 清除屏幕
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//清除颜色缓冲以及深度缓冲
+    // 启用二维纹理
+    glBindTexture(GL_TEXTURE_2D, texName[0]);//floor
+
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);//纹理和材质混合方式
+    glPushMatrix(); // 保存当前模型视图矩阵
+    glRotatef((GLfloat)direction, 0.0, 0.0, 1.0);   // 用变换后(旋转或移动)模型坐标系建立模型
+    glTranslated(Ox, Oy, 0.0);
+//
+//    // 创建背景球体
+//    glBindTexture(GL_TEXTURE_2D, texName[3]);
+//    gluSphere(g_text, 30, 15, 15);
+//    gluQuadricTexture(g_text, GLU_TRUE);             //建立纹理坐标
+//    gluQuadricDrawStyle(g_text, GLU_FILL);           //用面填充
+//
+//    // 地面部分
+//    glBindTexture(GL_TEXTURE_2D, texName[0]);//floor
+//    glBegin(GL_QUADS);
+//    glTexCoord2f(0.0, 0.0);glVertex3f(-10.0, -10.0, 0.0);
+//    glTexCoord2f(0.0, 1.0);glVertex3f(-10.0, 10.0, 0.0);
+//    glTexCoord2f(1.0, 1.0);glVertex3f(10.0, 10.0, 0.0);
+//    glTexCoord2f(1.0, 0.0);glVertex3f(10.0, -10.0, 0.0);
+//    glEnd();
+//
+//    // 墙体部分
+//    glBindTexture(GL_TEXTURE_2D, texName[1]);//wall
+//    glBegin(GL_QUADS);
+//    glTexCoord2f(0.0, 0.0);glVertex3f(-10.0, -10.0, 0.0);
+//    glTexCoord2f(0.0, 10.0);glVertex3f(-10.0, -10.0, 10.0);
+//    glTexCoord2f(10.0, 10.0);glVertex3f(-10.0, 10.0, 10.0);
+//    glTexCoord2f(10.0, 0.0);glVertex3f(-10.0, 10.0, 0);
+//
+//    glTexCoord2f(0.0, 0.0);glVertex3f(10.0, -10.0, 0.0);
+//    glTexCoord2f(0.0, 10.0);glVertex3f(10.0, -10.0, 10.0);
+//    glTexCoord2f(10.0, 10.0);glVertex3f(10.0, 10.0, 10.0);
+//    glTexCoord2f(10.0, 0.0);glVertex3f(10.0, 10.0, 0);
+//
+//    glTexCoord2f(0.0, 0.0);glVertex3f(-10.0, 10.0, 0.0);
+//    glTexCoord2f(0.0, 10.0);glVertex3f(-10.0, 10.0, 10.0);
+//    glTexCoord2f(10.0, 10.0);glVertex3f(10.0, 10.0, 10.0);
+//    glTexCoord2f(10.0, 0.0);glVertex3f(10.0, 10.0, 0.0);
+//
+//    glTexCoord2f(0.0, 0.0);glVertex3f(-10.0, -10.0, 0.0);
+//    glTexCoord2f(0.0, 10.0);glVertex3f(-10.0, -10.0, 10.0);
+//    glTexCoord2f(10.0, 10.0);glVertex3f(10.0, -10.0, 10.0);
+//    glTexCoord2f(10.0, 0.0);glVertex3f(10.0, -10.0, 0);
+//    glEnd();
+//
+//    // 封顶部分
+//    glBindTexture(GL_TEXTURE_2D, texName[2]);//ceiling
+//    glBegin(GL_QUADS);
+//    glTexCoord2f(0.0, 0.0);glVertex3f(-10.0, -10.0, 10.0);
+//    glTexCoord2f(0.0, 1.0);glVertex3f(-10.0, 10.0, 10.0);
+//    glTexCoord2f(1.0, 1.0);glVertex3f(10.0, 10.0, 10.0);
+//    glTexCoord2f(1.0, 0.0);glVertex3f(10.0, -10.0, 10.0);
+//    glEnd();
+
+    glCallList(Model);  // 调用显示列表
+
     glPopMatrix();  // 恢复保存的视角
     glFlush();//用于强制刷新缓存
     glutSwapBuffers();//交换双缓存
@@ -190,13 +230,15 @@ void reshape(int w, int h)
 // projection settings
     glMatrixMode(GL_PROJECTION);//选择投影矩阵
     glLoadIdentity();//重置当前指定的矩阵为单位矩阵
-    gluPerspective(90.0, (GLfloat)w / (GLfloat)h, 0.1, 300.0);//(设置虚拟投影面的宽高比)
+    gluPerspective(90.0, (GLfloat)w / (GLfloat)h, 0.1, 10000.0);//(设置虚拟投影面的宽高比)
     // 一般和视口尺寸一致，否则会引起拉伸
 
 // model / viewpoint settings
     glMatrixMode(GL_MODELVIEW);//模型视景矩阵||GL_TEXTURE,对纹理矩阵堆栈 应用随后的矩阵操作.
     glLoadIdentity();
     //通过设置视点来设置模型坐标系
+    //glScalef(3, 3, 1);
+    //gluLookAt(0, -40, 45, 0, 0, 0, 0, 1, 0);
     gluLookAt(0, 0, 3, 0,  10, 3, 0.0, 0.0, 1.0);
 }
 
@@ -245,6 +287,7 @@ void print_version(){
     printf("OOpenGL实现的版本号：%s\n",OpenGLVersion );
     printf("OGLU工具库版本：%s\n", gluVersion);
     printf("最大支持图片像素个数：%d\n", max);
+//    printf("GLFloat size: %d\n", sizeof(GL_FLOAT));
 }
 
 int main(int argc, char* argv[])
@@ -257,7 +300,7 @@ int main(int argc, char* argv[])
 
     init();
     print_version();
-    glutDisplayFunc(&display);
+    glutDisplayFunc(&display_old);
 //    glutIdleFunc(&display);
     glutReshapeFunc(&reshape);
     glutKeyboardFunc(&keyboard);

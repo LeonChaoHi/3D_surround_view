@@ -1,3 +1,6 @@
+/*
+ * Based on rawcode, style changed to glut.
+ */
 //基于OpenGL投算法实现
 //#include <Windows.h>
 #include <GL/glut.h>
@@ -29,13 +32,13 @@ void DrawMyObjects(void);
 //void CALLBACK rotate(AUX_EVENTREC *event);
 void myReshape(GLsizei w, GLsizei h);
 void display(void);
-void rotate(AUX_EVENTREC *event);
+//void rotate(AUX_EVENTREC *event);
 GLubyte
     imagedata0[MAXSIZE],
     imagedata1[MAXSIZE], imagedata2[MAXSIZE], imagedata3[MAXSIZE];
 GLsizei width = 360, height = 240;
 GLint i, ii, p, n, Model;
-TVSInfo stTVSInfo;  // 标定参数
+//TVSInfo stTVSInfo;  // 标定参数
 int Option = 100, dx = 700, dy = 700, dz = 700,
     dx1 = 700, dy1 = 600, dz1 = 700,
     dx2 = 700, dy2 = 600, dz2 = 700;
@@ -88,7 +91,7 @@ void myinit()
 {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    makeImage();    // 载入纹理
+    //makeImage();    // 载入纹理
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_SMOOTH);
     //Model = GL3DS_initialize_28();  // 生成模型的显示列表，保存显示列表号
@@ -99,14 +102,16 @@ void myinit()
 void myReshape(GLsizei w, GLsizei h)
 {
     glViewport(0, 0, w, h);
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(70, 1, 0.1, 80);
+    gluPerspective(70, (GLfloat)w / (GLfloat)h, 0.1, 300);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     //OMINI
-    glScalef(3, 3, 1);
-    gluLookAt(0, -40, 45, 0, 0, 0, 0, 1, 0);
+//    glScalef(3, 3, 1);
+    gluLookAt(100, 0, 0, 0, 0, 0, 0, 0, 1);
     //front1
     // glScalef(2.5,2.5,1);
     // glTranslatef(0,0,27);
@@ -142,9 +147,41 @@ void display(void)
     glCullFace(GL_BACK);
     DrawMyObjects();    // 绘制模型并纹理映射
     glFlush();
+    glutSwapBuffers();//交换双缓存
+    glutPostRedisplay();//标志下次刷新，没有的话，程序打开后不会刷新界面
 }
 
 void DrawMyObjects(void)
+{
+
+    //纹理映入
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    //glBindTexture(GL_TEXTURE_2D, texture[1]); //1front //2left //0tail //3right
+   // glVertexPointer(3, GL_FLOAT, 0, m);
+    //glTexCoordPointer(2, GL_FLOAT, 0, s);
+    //glDrawArrays(GL_TRIANGLE_STRIP, 0, 74);
+
+    //接缝处
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //    //glColor4f(1.0f,1.0f,1.0f,0.7f);
+    //glColorPointer(4, GL_FLOAT, 0, colorAC);
+    //glBindTexture(GL_TEXTURE_2D, texture[1]);
+    //glVertexPointer(3, GL_FLOAT, 0, m + 72);
+    //glTexCoordPointer(2, GL_FLOAT, 0, sA);
+    //glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisable(GL_TEXTURE_2D);
+    glCallList(Model);  // 调用显示列表
+    glDisable(GL_BLEND);
+}
+/*
+void DrawMyObjects_old(void)
 {
     GLfloat m[222], m1[222], m2[222], m3[222], m4[222], m5[222], m6[222];
     GLfloat mm[222], mm1[222], mm2[222], mm3[222], mm4[222];
@@ -310,10 +347,11 @@ void DrawMyObjects(void)
     glDisable(GL_TEXTURE_2D);
     glCallList(Model);  // 调用显示列表
     glDisable(GL_BLEND);
-}
+}*/
 
 // catch keyboard/mouse event
 //void CALLBACK rotate(AUX_EVENTREC *event)
+/*
 void rotate(AUX_EVENTREC *event)
 {
     GLint x, y;
@@ -321,15 +359,35 @@ void rotate(AUX_EVENTREC *event)
     x = event->data[AUX_MOUSEX];
     y = event->data[AUX_MOUSEY];
 }
+ */
 
-int main(void)
+// 定义键盘事件时的动作
+void keyboard(unsigned char key, int x, int y)
+{}
+
+int main(int argc, char* argv[])
 {
-    TvsLibSetDefaultParam(&stTVSInfo, Option);
-    auxInitDisplayMode(AUX_SINGLE | AUX_RGBA);
-    auxInitPosition(0, 0, 400, 400);
-    auxInitWindow("Geometric Primitive Types");
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE| GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(800, 800);
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow(argv[0]);
+
     myinit();
-    auxReshapeFunc(myReshape);
-    auxMouseFunc(AUX_LEFTBUTTON, AUX_MOUSEDOWN, rotate);
-    auxMainLoop(display);
+    //print_version();
+    glutDisplayFunc(&display);
+//    glutIdleFunc(&display);
+    glutReshapeFunc(&myReshape);
+    glutKeyboardFunc(&keyboard);
+    glutMainLoop();
+
+    return 0;
+    //TvsLibSetDefaultParam(&stTVSInfo, Option);  //初始化相机参数的函数
+    //auxInitDisplayMode(AUX_SINGLE | AUX_RGBA);
+    //auxInitPosition(0, 0, 400, 400);
+    //auxInitWindow("Geometric Primitive Types");
+    //myinit();
+    //auxReshapeFunc(myReshape);
+    //auxMouseFunc(AUX_LEFTBUTTON, AUX_MOUSEDOWN, rotate);
+    //auxMainLoop(display);
 }

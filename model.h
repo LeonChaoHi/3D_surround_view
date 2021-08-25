@@ -1,4 +1,8 @@
 #include "GL/gl.h"
+#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
+#include <iostream>
 
 static GLfloat GL3DS_MATERIAL_model[12] = {
 1.00000000000000000000, 1.00000000000000000000, 1.00000000000000000000, 1.00000000000000000000,
@@ -1952,21 +1956,37 @@ static GLuint GL3DS_INDEX_model[] = {
 612,613,506,
 612,506,613};
 
+inline void print_vertex(){
+    for(int i=0; i < 614; ++i){
+        int v0, v1, v2;
+        int t0, t1;
+        t0 = i * 8;
+        t1 = t0 + 1;
+        v0 = i * 8 + 5;
+        v1 = v0 + 1;
+        v2 = v1 + 1;
+        printf("%d : %f %f %f %f %f \n", i, GL3DS_VERTEX_model[t0], GL3DS_VERTEX_model[t1],
+               GL3DS_VERTEX_model[v0], GL3DS_VERTEX_model[v1], GL3DS_VERTEX_model[v2]);
+    }
+}
+
 int GL3DS_initialize_model() {
   int ReturnVal;
   FILE *in;
-  if (!(in = fopen("model.gl", "rb")))
+  if (!(in = fopen("../model.gl", "rb")))
     return(-1);
   if (fread(GL3DS_VERTEX_model, 19648, 1, in) != 1)
     return(-1);
   fclose(in);
   ReturnVal = glGenLists(1);
-  glInterleavedArrays(GL_T2F_N3F_V3F, 0, GL3DS_VERTEX_model);
+  glInterleavedArrays(GL_T2F_N3F_V3F, 0, GL3DS_VERTEX_model);   // 激活顶点，类似于vertex_pointer
+  print_vertex();
+  std::cout << " hello world " << std::endl;
   glNewList(ReturnVal, GL_COMPILE);
     glFrontFace(GL_CCW);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_CULL_FACE); // enable cull_face
+    glCullFace(GL_BACK);    // choose face to cull
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // set both face fill_mode (wrt GL_LINE GL_POINT)
     glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat *) &GL3DS_MATERIAL_model[0]);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat *) &GL3DS_MATERIAL_model[4]);
     glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat *) &GL3DS_MATERIAL_model[8]);

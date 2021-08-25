@@ -7,44 +7,11 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-///*
-// *  init window
-// */
-//void init()
-//{
-//    glClearColor(0.0, 0.0, 0.0, 0.0);
-//    glMatrixMode(GL_PROJECTION);
-//    glOrtho(-5, 5, -5, 5, 5, 15);
-//    glMatrixMode(GL_MODELVIEW);
-//    gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
-//}
-//
-//void display()
-//{
-//    glClear(GL_COLOR_BUFFER_BIT);
-//    glColor3f(1.0, 0, 0);
-//    glutWireTeapot(3);
-//    glFlush();
-//}
-//
-//int main(int argc, char *argv[])
-//{
-//    glutInit(&argc, argv);
-//    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
-//    glutInitWindowPosition(0, 0);
-//    glutInitWindowSize(300, 300);
-//    glutCreateWindow("OpenGL 3D View");
-//    init();
-//    glutDisplayFunc(display);
-//    glutMainLoop();
-//
-//    return 0;
-//}
+#include "model.h"
 #define PI 3.14159265359
 
-
-
 static GLuint texName[4];//存放纹理
+static GLint Model = 0;
 static double Ox = 0;
 static double Oy = 0;
 static double direction = 0;//站立位置及前进方向；
@@ -112,6 +79,7 @@ void init()
     loadTexture("../resources/ceiling.bmp",texName[2]);
     loadTexture("../resources/back.bmp", texName[3]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);//所读取的图像数据的行对齐方式
+    Model = GL3DS_initialize_model();  // 生成模型的显示列表，保存显示列表号
 }
 
 // 定义纹理模型并刷新双缓存
@@ -197,6 +165,9 @@ void reshape(int w, int h)
     glMatrixMode(GL_MODELVIEW);//模型视景矩阵||GL_TEXTURE,对纹理矩阵堆栈 应用随后的矩阵操作.
     glLoadIdentity();
     //通过设置视点来设置模型坐标系
+    //glScalef(3, 3, 1);
+    //gluLookAt(0, -40, 45, 0, 0, 0, 0, 1, 0);
+
     gluLookAt(0, 0, 3, 0,  10, 3, 0.0, 0.0, 1.0);
 }
 

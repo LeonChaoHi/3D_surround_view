@@ -172,12 +172,12 @@ void DrawMyObjects(void)
         pWorld[2] = m[i + 2] * dz1;
         pWorld[3] = 1;
         matrixMul(&stTVSInfo.staCameras[1].stCameraParamEXT.daExtParam, pWorld, pCam, 4,
-                  4, 1);
+                  4, 1);    // extparam(4x4) x Coord_world(4x1) = Coord_cam(4x1)
         for (j = 0; j <= 2; j++)
         {
-            pCame[j] = pCam[j];
+            pCame[j] = pCam[j]; // 不知道用处，可能是加因数 --> 截取前三个元素(x, y, z)
         }
-        Cam2ImgScara(pImg, pCame, &stTVSInfo.staCameras[0]);
+        Cam2ImgScara(pImg, pCame, &stTVSInfo.staCameras[0]);    // Coord_cam to Coord_img with intrinsic_param
         pImg[1] = pImg[1] * 360 / 320; // 原尺寸为 360x320， 将dim2统一到360 下面是归一化
         s[2 * p + 24 + 0] = pImg[1] > 0 ? (pImg[1] <= 360 ? (pImg[1] / 360) : 1) : 0;
         s[2 * p + 24 + 1] = pImg[0] > 0 ? (pImg[0] <= 240 ? (pImg[0] / 240) : 1) : 0;

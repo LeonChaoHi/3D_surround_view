@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cmath>
 #include "model.h"
+#include "bowl.h"
 #define PI 3.14159265359
 
 static GLuint texName[4];//存放纹理
@@ -83,7 +84,8 @@ void init()
     loadTexture("../resources/ceiling.bmp",texName[2]);
     loadTexture("../resources/back.bmp", texName[3]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);//所读取的图像数据的行对齐方式
-    Model = GL3DS_initialize_model();  // 生成模型的显示列表，保存显示列表号
+//    Model = GL3DS_initialize_model();  // 生成模型的显示列表，保存显示列表号
+    Model = GL3DS_initialize_bowl();
 }
 
 // 定义纹理模型并刷新双缓存
@@ -238,7 +240,7 @@ void reshape(int w, int h)
     glLoadIdentity();
     //通过设置视点来设置模型坐标系
     //glScalef(3, 3, 1);
-    //gluLookAt(0, -40, 45, 0, 0, 0, 0, 1, 0);
+//    gluLookAt(0, -40, 45, 0, 0, 0, 0, 1, 0);
     gluLookAt(0, 0, 3, 0,  10, 3, 0.0, 0.0, 1.0);
 }
 

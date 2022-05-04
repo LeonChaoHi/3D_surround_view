@@ -1,3 +1,7 @@
+/*
+ * 参考论文中的原始代码
+ *
+ */
 //基于OpenGL投算法实现
 //#include <Windows.h>
 #include <GL/glut.h>
@@ -146,7 +150,7 @@ void display(void)
 
 void DrawMyObjects(void)
 {
-    GLfloat m[222], m1[222], m2[222], m3[222], m4[222], m5[222], m6[222];
+    GLfloat m[222], m1[222], m2[222], m3[222], m4[222], m5[222], m6[222];   // 222/3 = 74个点
     GLfloat mm[222], mm1[222], mm2[222], mm3[222], mm4[222];
     GLint i, j, k, n, p;
     GLdouble pWorld[4], pCam[4], pCame[4], pImg[2];
@@ -162,23 +166,27 @@ void DrawMyObjects(void)
                            1.0, 1.0, 1.0, 0.9, 1.0, 1.0, 1.0, 0.9};
     p = 0;
     glRotatef(-10, 1.0f, 0.0f, 0.0f);
-    ThreeSurface(mm, mm1, mm2, mm3, mm4, m, m1, m2, m3);    //获取三维曲面顶投数据    // 获取三维顶点坐标
+    ThreeSurface(mm, mm1, mm2, mm3, mm4, m, m1, m2, m3);    // 获取三维曲面顶点坐标
 
     // 计算映射坐标(已知3D坐标，求解2D纹理坐标)
     for (i = 36; i <= 75; i += 3)   // 13个点
     {
+        // 1. 由模型坐标[m[i], m[i+1], m[i+2]] 转化为世界系坐标 pWorld
         pWorld[0] = -m[i + 1] * dx1;
         pWorld[1] = m[i] * dy1;
         pWorld[2] = m[i + 2] * dz1;
         pWorld[3] = 1;
+        // 2. 经外参矩阵，转换到相机坐标系 pCam->pCame
         matrixMul(&stTVSInfo.staCameras[1].stCameraParamEXT.daExtParam, pWorld, pCam, 4,
-                  4, 1);    // extparam(4x4) x Coord_world(4x1) = Coord_cam(4x1)
+                  4, 1);    // extparam(3x4) * Coord_world(4x1) = Coord_cam(3x1) ==> [w*u, w*v, w]
         for (j = 0; j <= 2; j++)
         {
             pCame[j] = pCam[j]; // 不知道用处，可能是加因数 --> 截取前三个元素(x, y, z)
         }
+        // 3. 经 内参矩阵 和 畸变校正参数，转换为像素坐标 pImg
         Cam2ImgScara(pImg, pCame, &stTVSInfo.staCameras[0]);    // Coord_cam to Coord_img with intrinsic_param
-        pImg[1] = pImg[1] * 360 / 320; // 原尺寸为 360x320， 将dim2统一到360 下面是归一化
+        // 4. 经 长宽等宽，归一化 和 边界截取，转换为纹理坐标 s
+        pImg[1] = pImg[1] * 360 / 320; // 原尺寸为 360x320， 将dim2统一到360. 下面是归一化
         s[2 * p + 24 + 0] = pImg[1] > 0 ? (pImg[1] <= 360 ? (pImg[1] / 360) : 1) : 0;
         s[2 * p + 24 + 1] = pImg[0] > 0 ? (pImg[0] <= 240 ? (pImg[0] / 240) : 1) : 0;
         p++;

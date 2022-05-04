@@ -1115,26 +1115,6 @@ inline void print_vertex_bowl(){
     }
 }
 
-int swap_yz(){
-    FILE *out;
-    if (!(out = fopen("../new_bowl.gl", "w")))
-        return(-1);
-    GLfloat tmp;
-    for(int i=0; i < 315; ++i){
-        int v0, v1, v2;
-        v0 = i * 8 + 5;
-        v1 = v0 + 1;
-        v2 = v1 + 1;
-        tmp = GL3DS_VERTEX_bowl[v1];
-        GL3DS_VERTEX_bowl[v1] = GL3DS_VERTEX_bowl[v2];
-        GL3DS_VERTEX_bowl[v2] = tmp;
-    }
-    if (fwrite(GL3DS_VERTEX_bowl, 10080, 1, out) != 1)
-        return(-1);
-    fclose(out);
-    return 0;
-}
-
 int GL3DS_initialize_bowl() {
   int ReturnVal;
   FILE *in;
@@ -1154,8 +1134,9 @@ int GL3DS_initialize_bowl() {
     glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat *) &GL3DS_MATERIAL_bowl[0]);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat *) &GL3DS_MATERIAL_bowl[4]);
     glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat *) &GL3DS_MATERIAL_bowl[8]);
-    glDrawElements(GL_TRIANGLES, 3276, GL_UNSIGNED_INT, &GL3DS_INDEX_bowl[0]);
-  glEndList();
+//    glDrawElements(GL_TRIANGLES, 3276, GL_UNSIGNED_INT, &GL3DS_INDEX_bowl[0]);
+    glDrawElements(GL_TRIANGLES, 800, GL_UNSIGNED_INT, &GL3DS_INDEX_bowl[0]);
+    glEndList();
   print_vertex_bowl();
   return (ReturnVal);
 }

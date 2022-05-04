@@ -1,5 +1,6 @@
 /*
  * Based on rawcode, style changed to glut.
+ * 尝试在原代码上修改，但较难
  */
 //基于OpenGL投算法实现
 //#include <Windows.h>

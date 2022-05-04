@@ -1,3 +1,6 @@
+/*
+ * 原始房间显示程序
+ * */
 //#include <glad/glad.h>
 #include <GL/glut.h>
 //#include <GL/glew.h>

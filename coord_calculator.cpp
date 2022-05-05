@@ -72,27 +72,38 @@ void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T,
     // Step 2: transform transmatrix to a vector M
     double M[9];
     int idx = 0;
+//    T = T.inv(cv::DECOMP_SVD);
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             M[idx++] = T.at<double>(i, j);
         }
     }
 
+    resize_ratio = 0.05;
     // Step 3: calculate each out_map(i,j)
     double x0, y0, w0, u, v, x, y;
     for(int i=0; i<n_points; ++i){
+        int tmp1 = m[i*3+1];    // y
+        int tmp0 = m[i*3];  // x
+        int tmp2 = m[i*3+2];    // z
+
 
         // 0. scaling i, j, k by resize ratio
-        double i0 = m[i*3] / resize_ratio;   // TODO: resize ratio, i0, j0需要平移
-        double j0 = m[i*3+1] / resize_ratio;
-        double k0 = m[i*3+2] / resize_ratio;
+        double i0 = -m[i*3+1] / resize_ratio + 600; // 世界坐标系 y 平移
+        double j0 = m[i*3] / resize_ratio + 640;   // 世界坐标系 x 平移
+        double k0 = m[i*3+2] / resize_ratio / 5; // 世界坐标系 z
+//        k0 = 0;
 
         // 1. Perspective transformation map corelation
-        x0 = M[0] * j0 + M[1] * i0 + M[2] + (M[3]*M[7]-M[4]*M[6]) * k0;
-        y0 = M[3] * j0 + M[4] * i0 + M[5] + (M[1]*M[6]-M[0]*M[7]) * k0;
-        w0 = M[6] * j0 + M[7] * i0 + M[8] + (M[0]*M[4]-M[1]*M[3]) * k0;
+        x0 = M[0] * j0 + M[1] * i0 + M[2] - (M[3]*M[7]-M[4]*M[6]) * k0;     // TODO: 正负？
+        y0 = M[3] * j0 + M[4] * i0 + M[5] - (M[1]*M[6]-M[0]*M[7]) * k0;
+        w0 = M[6] * j0 + M[7] * i0 + M[8] - (M[0]*M[4]-M[1]*M[3]) * k0;
         u = x0/w0;
         v = y0/w0;
+
+//        s[i*2] = u / 1024;
+//        s[i*2+1] = 1.0 - v / 1024;
+//        continue;
 
         // 2. Distortion rectification
         u = (u - c[0])/f[0];
@@ -116,12 +127,11 @@ void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T,
         double Y = f[1]*y*scale + c[1];
 
         // 3. Update s[i]
-        s[i*2] = float(X);//x
-        s[i*2+1] = float(Y);//y
-
         // 3. 经 长宽等宽，归一化 和 边界截取，转换为纹理坐标 s
         Y = Y * 640 / 480; // 原尺寸为 640x480， 将 dim2 统一到 640. 下面是归一化
-        s[i*2] = Y > 0 ? (Y <= 640 ? (Y / 640) : 1) : 0;  // TODO: X 和 Y 的先后？
-        s[i*2+1] = X > 0 ? (X <= 640 ? (X / 640) : 1) : 0;
+        s[i*2] = X / 640;
+        s[i*2+1] = 1.0 - Y / 640;
+//        s[i*2] = Y > 0 ? (Y <= 640 ? (Y / 640) : 1) : 0;  // TODO: X 和 Y 的先后？
+//        s[i*2+1] = X > 0 ? (X <= 640 ? (X / 640) : 1) : 0;
     }
 }

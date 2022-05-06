@@ -10,7 +10,7 @@
 #include "main.h"
 #include "model.h"
 #include "bowl.h"
-#include "newbowl.h"
+#include "refinedbowl.h"
 #include "coord_calculator.h"
 #define PI 3.14159265359
 using namespace std;
@@ -24,8 +24,9 @@ static double direction = 0; //站立位置及前进方向；
 static double step = 0.5;
 GLUquadricObj*g_text;//曲面，制作一个包围房间的大球体做背景
 
-static GLfloat m[540];  // 180个点
-static GLfloat s[360];
+static GLfloat m[960];  // 320个点
+static GLfloat s[640];
+static int n_points = 320;
 
 /*
  * 加载单张图片，作为纹理资源
@@ -87,15 +88,15 @@ void init()
     glShadeModel(GL_FLAT);//设置着色模式 GL_FLAT 恒定着色，GL_SMOOTH光滑着色
     glEnable(GL_DEPTH_TEST);
     g_text = gluNewQuadric();//这句代码需放置在绘图及显示之前
-    loadTexture("../resources/room/0.bmp",texName[0]);//图片与程序源代码放置在同一目录下即可
-    loadTexture("../resources/left0.bmp", texName[1]);
-    loadTexture("../resources/right0.bmp",texName[2]);
+    loadTexture("../resources/rear.bmp",texName[0]);//图片与程序源代码放置在同一目录下即可
+    loadTexture("../resources/left.bmp", texName[1]);
+    loadTexture("../resources/right.bmp",texName[2]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);//所读取的图像数据的行对齐方式
     // 自定义框架模型的显示列表，保存显示列表号
 //    Model = GL3DS_initialize_model();
 //    Model = GL3DS_initialize_bowl();
-    Model = GL3DS_initialize_newbowl();
-    if(Model==0){
+    Model = GL3DS_initialize_refinedbowl();
+    if(Model<0){
         printf("读取模型失败");
         exit(1);
     }
@@ -112,7 +113,8 @@ void coord_init() {
     // 加载参数
     cv::Mat K, D, T;
     cv::FileStorage parser;
-    string filepath = "../resources/room/2.ymal";
+//    string filepath = "../resources/room/2.ymal";
+    string filepath = "../resources/rear.ymal";
     if (parser.open(filepath, cv::FileStorage::READ)) {
         string camerastr="cameraMatrix";
         string disstr="distCoeffs";
@@ -120,14 +122,15 @@ void coord_init() {
         parser[disstr]>>D;
         parser.release();
     }
-    filepath = "../resources/room/trans_2.ymal";
+//    filepath = "../resources/room/trans_2.ymal";
+    filepath = "../resources/trans_rear.ymal";
     if (parser.open(filepath, cv::FileStorage::READ)) {
         parser["trans"]>>T;
         parser.release();
     }
     // 计算映射
     cv::Size sz(1280, 2560);
-    coord_calculator::calc_coord(K, D, T, sz, 0.01, m, s, 180);
+    coord_calculator::calc_coord(K, D, T, sz, 0.01, m, s, n_points);
 }
 
 /*
@@ -148,7 +151,7 @@ void draw_objects(){
     glVertexPointer(3, GL_FLOAT, 0, m);
     glTexCoordPointer(2, GL_FLOAT, 0, s);
 //    glDrawArrays(GL_TRIANGLE_STRIP, 0, 180);    // 此处应与newbowl.h
-    glDrawElements(GL_TRIANGLES, 1872, GL_UNSIGNED_INT, &GL3DS_INDEX_newbowl[0]);
+    glDrawElements(GL_TRIANGLES, 3552, GL_UNSIGNED_INT, &GL3DS_INDEX_refinedbowl[0]);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);

@@ -48,10 +48,8 @@ void coord_calculator::calc_coord(img_type type, GLfloat m[], GLfloat s[], int n
     calc_coord(params_vec[save_idx].K, params_vec[save_idx].D, params_vec[save_idx].T, sz, 1.0, m, s, n_points);
 }
 
-void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T, cv::Size outsize, double resize_ratio, GLfloat m[], GLfloat s[], int n_points)
+void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::InputArray T, cv::Size outsize, double resize_ratio, GLfloat m[], GLfloat s[], int n_points)
 {
-//    int m[300], s[200];
-//    int n_points = 100;
     CV_Assert(K.depth() == CV_64F && D.depth() == CV_64F && T.depth() == CV_64F);
 
     // Step 1: initialize undistortion parameters
@@ -69,16 +67,24 @@ void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T,
     cv::Matx33d iR = (PP * RR).inv(cv::DECOMP_SVD);
 
     // Step 2: transform transmatrix to a vector M
-    double M[9];
+    cv::Matx33d H = T.getMat();
+    cv::Matx33d RT = camMat.inv(cv::DECOMP_SVD) * H;
+    cv::Vec3d r1, r2, r3;
+    r1 = {RT(0,0), RT(1,0), RT(2,0)};
+    r2 = {RT(0,1), RT(1,1), RT(2,1)};
+    r3 = r1.cross(r2);
+    cv::Matx34d RT_3d = {r1[0], r2[0], r3[0], RT(0,2), r1[1], r2[1], r3[1], RT(1,2), r1[2], r2[2], r3[2], RT(2,2)};
+    cv::Matx34d H_3d = camMat * RT_3d;
+
+    double M[12];
     int idx = 0;
-//    T = T.inv(cv::DECOMP_SVD);
     for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            M[idx++] = T.at<double>(i, j);
+        for(int j=0;j<4;j++){
+            M[idx++] = H_3d(i, j);
         }
     }
 
-    resize_ratio = 0.1;
+    resize_ratio = 0.07;
     // Step 3: calculate each out_map(i,j)
     double x0, y0, w0, u, v, x, y;
     for(int i=0; i<n_points; ++i){
@@ -92,16 +98,18 @@ void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T,
 //        double j0 = m[i*3] / resize_ratio + 640;   // 世界坐标系 x 平移
         double i0 = -m[i*3+1] / resize_ratio + 300; // 世界坐标系 y 平移
         double j0 = m[i*3] / resize_ratio + 450;   // 世界坐标系 x 平移
-        double k0 = m[i*3+2] / resize_ratio / 10 ; // 世界坐标系 z
+        double k0 = m[i*3+2] / resize_ratio; // 世界坐标系 z
 
 //        s[i*2] = tmp0 / 30 + 0.5;
 //        s[i*2+1] = tmp1 / 30 + 0.5;
 //        continue;
 
         // 1. Perspective transformation map corelation
-        x0 = M[0] * j0 + M[1] * i0 + M[2] + (M[3]*M[7]-M[4]*M[6]) * k0;     // TODO: 正负？
-        y0 = M[3] * j0 + M[4] * i0 + M[5] + (M[1]*M[6]-M[0]*M[7]) * k0;
-        w0 = M[6] * j0 + M[7] * i0 + M[8] + (M[0]*M[4]-M[1]*M[3]) * k0;
+        double lambda = r1[2] * j0 + r2[2] * i0 + r3[2] * k0 + RT(2,2);
+        k0 *= -(200.0  * lambda);
+        x0 = M[0] * j0 + M[1] * i0 + M[2] * k0 + M[3];
+        y0 = M[4] * j0 + M[5] * i0 + M[6] * k0 + M[7];
+        w0 = M[8] * j0 + M[9] * i0 + M[10] * k0 + M[11];
         u = x0/w0;
         v = y0/w0;
 
@@ -141,3 +149,55 @@ void coord_calculator::calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T,
 //        s[i*2+1] = X > 0 ? (X <= 640 ? (X / 640) : 1) : 0;
     }
 }
+
+/*
+ *     vector<Point2f> pts_dst, pts_src;
+    pts_dst.reserve(4), pts_dst.reserve(4);
+    // lu = left up , ru = right up , etc...
+    Point2f pts_lu, pts_ru, pts_rb, pts_lb;
+    int w = 0, h = 0, displace_l = 0, displace_r = 0;
+    // Set points in region of interest
+    pts_lu = Point2f(0, 620); // 0 620
+    pts_ru = Point2f(1023, 620); // 1023 620
+    pts_rb = Point2f(1023, 870); // 1023 870
+    pts_lb = Point2f(0, 870); // 0 870
+    w = 900; h = 300;
+    displace_l = 250; displace_r = 250;
+    Size size(w, h);
+    Mat im_dst(size, CV_8UC4, Scalar(0, 0, 0, 0));
+    Mat homogr;
+    pts_src.push_back(pts_lu);
+    pts_src.push_back(pts_ru);
+    pts_src.push_back(pts_rb);
+    pts_src.push_back(pts_lb);
+    pts_dst.emplace_back(0.0f, 0.0f);
+    pts_dst.emplace_back(size.width - 1.0f, 0.0f);
+    pts_dst.emplace_back(float(size.width - displace_r), float(size.height - 1));
+    pts_dst.emplace_back(float(displace_l), float(size.height - 1));
+    CvMat *object_points = cvCreateMat(4, 3, CV_64FC1);
+    CvMat *image_points = cvCreateMat(4, 2, CV_64FC1);
+    for(int i=0; i<4; ++i){
+        CV_MAT_ELEM(*object_points, double, i, 0) = pts_dst[0].x;
+        CV_MAT_ELEM(*object_points, double, i, 1) = pts_dst[0].y;
+        CV_MAT_ELEM(*object_points, double, i, 2) = 0.0f;
+        CV_MAT_ELEM(*image_points, double, i, 0) = pts_src[0].x;
+        CV_MAT_ELEM(*image_points, double, i, 1) = pts_src[0].y;
+    }
+    CvMat *intrinsic, *distortion;
+    CvMat MM = K.getMat(), DD = D.getMat();
+    intrinsic = &MM;
+    distortion = &DD;
+
+    CvMat *rotation_vector = cvCreateMat(3, 1, CV_32FC1);
+    CvMat *rotation_mat = cvCreateMat(3, 3, CV_32FC1);
+    CvMat *translation_vector = cvCreateMat(3, 1, CV_32FC1);
+    cvFindExtrinsicCameraParams2(object_points, image_points, intrinsic, distortion, rotation_vector, translation_vector);
+    cvRodrigues2(rotation_vector, rotation_mat);
+    cv::Matx34d rr;
+    for(int i=0; i<3; ++i){
+        for(int j=0; j<3; ++j){
+            rr(i, j) = CV_MAT_ELEM(*rotation_mat, double, i, j);
+        }
+        rr(i, 3) = CV_MAT_ELEM(*translation_vector, double, i, 0);
+    }
+ */

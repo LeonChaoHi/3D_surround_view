@@ -24,7 +24,7 @@ public:
     } params;
     void params_registry(img_type type, cv::Mat K, cv::Mat D, cv::Mat T);
     void calc_coord(img_type type, GLfloat m[], GLfloat s[], int n_points);
-    static void calc_coord(cv::InputArray K, cv::InputArray D, cv::Mat T, cv::Size outsize, double resize_ratio, GLfloat m[], GLfloat s[], int n_points);
+    static void calc_coord(cv::InputArray K, cv::InputArray D, cv::InputArray T, cv::Size outsize, double resize_ratio, GLfloat m[], GLfloat s[], int n_points);
 
 private:
     img_type _type;

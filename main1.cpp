@@ -88,7 +88,7 @@ void init()
     glShadeModel(GL_FLAT);//设置着色模式 GL_FLAT 恒定着色，GL_SMOOTH光滑着色
     glEnable(GL_DEPTH_TEST);
     g_text = gluNewQuadric();//这句代码需放置在绘图及显示之前
-    loadTexture("../resources/rear.bmp",texName[0]);//图片与程序源代码放置在同一目录下即可
+    loadTexture("../resources/rear.bmp",texName[0]);
     loadTexture("../resources/left.bmp", texName[1]);
     loadTexture("../resources/right.bmp",texName[2]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);//所读取的图像数据的行对齐方式
@@ -150,7 +150,6 @@ void draw_objects(){
 
     glVertexPointer(3, GL_FLOAT, 0, m);
     glTexCoordPointer(2, GL_FLOAT, 0, s);
-//    glDrawArrays(GL_TRIANGLE_STRIP, 0, 180);    // 此处应与newbowl.h
     glDrawElements(GL_TRIANGLES, 3552, GL_UNSIGNED_INT, &GL3DS_INDEX_refinedbowl[0]);
 
     glDisableClientState(GL_VERTEX_ARRAY);
